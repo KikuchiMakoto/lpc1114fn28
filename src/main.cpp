@@ -38,6 +38,14 @@ int main(void) {
     Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_IOCON);
     Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_GPIO);
     Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_UART0);
+    Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_CT16B0);
+
+    // Timer0 
+    // for precious delay, 10us by 1 count
+    Chip_TIMER_Init(LPC_TIMER16_0);
+    Chip_TIMER_Reset(LPC_TIMER16_0);
+    Chip_TIMER_PrescaleSet(LPC_TIMER16_0, (SystemCoreClock / 10000) - 1); // 100us
+    Chip_TIMER_Enable(LPC_TIMER16_0);
 
     // GPIO
     Chip_GPIO_Init(LPC_GPIO);
@@ -61,13 +69,13 @@ int main(void) {
 
     // メインループ
     while (1) {
-        // LED点灯
-        Chip_GPIO_SetPinState(LPC_GPIO, LED_PORT, LED_PIN, true);
-        delay(500);
-        
         // LED消灯
+        Chip_GPIO_SetPinState(LPC_GPIO, LED_PORT, LED_PIN, true);
+        delay(900);
+        
+        // LED点灯
         Chip_GPIO_SetPinState(LPC_GPIO, LED_PORT, LED_PIN, false);
-        delay(500);
+        delay(100);
     }
     
     NVIC_DisableIRQ(UART0_IRQn);
@@ -77,17 +85,23 @@ int main(void) {
 }
 
 void delay(uint32_t count) {
-    while (count-- > 0) {
-        for (int i = 0; i < 1000; i++) {
-            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-        }
+    volatile uint32_t t_start = Chip_TIMER_ReadCount(LPC_TIMER16_0);
+    //Timer 0 count 100us per count
+    for (;;) {
+        volatile uint32_t t_now = Chip_TIMER_ReadCount(LPC_TIMER16_0);
+        if ((t_now - t_start) >= count*10) break;
     }
+    // while (count-- > 0) {
+    //     for (int i = 0; i < 1000; i++) {
+    //         __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
+    //         __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
+    //         __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
+    //         __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
+    //         __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
+    //         __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
+    //         __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
+    //     }
+    // }
 }
 
 extern "C" void UART_IRQHandler(void)
