@@ -25,7 +25,6 @@ ifeq ($(BUILD),debug)
 else
     # 高度最適化 + サイズ重視 + CPU 特化
     CFLAGS_EXTRA = -Os -flto \
-				   -Wl,--gc-sections \
 				   -fmerge-constants -fipa-pta \
                    -fomit-frame-pointer -fno-common \
 				   -ffunction-sections -fdata-sections \
@@ -50,7 +49,7 @@ CFLAGS  = -DCORE_M0 -DUSE_OLD_STYLE_DATA_BSS_INIT \
 CXXFLAGS= $(CFLAGS) -fno-exceptions -fno-rtti
 LDFLAGS = -T$(SRCDIR)/lpc1114.ld \
           -Wl,-Map=$(OUTDIR)/$(TARGET).map \
-		  -nostdlib \
+		  -nostdlib -Wl,--gc-sections \
           -specs=nosys.specs -specs=nano.specs \
           -lc -lgcc $(LDFLAGS_EXTRA)
 
