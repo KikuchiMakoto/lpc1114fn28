@@ -28,7 +28,11 @@ OBJS = $(addprefix $(OBJDIR)/,$(notdir $(C_SOURCES:.c=.o))) \
 # ==== Compiler/Linker flags ====
 CFLAGS  = -DCORE_M0 -DUSE_OLD_STYLE_DATA_BSS_INIT -mcpu=cortex-m0 -mthumb -Wall -Wextra -O2 $(INCLUDES)
 CXXFLAGS= $(CFLAGS) -fno-exceptions -fno-rtti
-LDFLAGS = -T$(SRCDIR)/lpc1114.ld -nostdlib -Wl,--gc-sections -Wl,-Map=$(OUTDIR)/$(TARGET).map -lgcc
+LDFLAGS = -T$(SRCDIR)/lpc1114.ld \
+		-nostdlib -Wl,--gc-sections \
+		-Wl,-Map=$(OUTDIR)/$(TARGET).map \
+		-specs=nosys.specs -specs=nano.specs \
+		-lc -lgcc
 
 # ==== Build rules ====
 all: $(OBJDIR) $(OUTDIR) \
