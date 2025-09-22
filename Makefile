@@ -26,13 +26,12 @@ OBJS = $(addprefix $(OBJDIR)/,$(notdir $(C_SOURCES:.c=.o))) \
        $(addprefix $(OBJDIR)/,$(notdir $(CPP_SOURCES:.cpp=.o)))
 
 # ==== Compiler/Linker flags ====
-CFLAGS  = -DCORE_M0 -DUSE_OLD_STYLE_DATA_BSS_INIT -mcpu=cortex-m0 -mthumb -Wall -Wextra -O2 $(INCLUDES)
+CFLAGS  = -DCORE_M0 -DUSE_OLD_STYLE_DATA_BSS_INIT \
+          -mcpu=cortex-m0 -mthumb -Wall -Wextra -O2 $(INCLUDES)
 CXXFLAGS= $(CFLAGS) -fno-exceptions -fno-rtti
 LDFLAGS = -T$(SRCDIR)/lpc1114.ld \
-		-nostdlib -Wl,--gc-sections \
-		-Wl,-Map=$(OUTDIR)/$(TARGET).map \
-		-specs=nosys.specs -specs=nano.specs \
-		-lc -lgcc
+          -Wl,--gc-sections \
+          -Wl,-Map=$(OUTDIR)/$(TARGET).map
 
 # ==== Build rules ====
 all: $(OBJDIR) $(OUTDIR) \
@@ -42,10 +41,10 @@ all: $(OBJDIR) $(OUTDIR) \
      $(OUTDIR)/$(TARGET).lst
 
 $(OBJDIR):
-	mkdir $(OBJDIR)
+	@if not exist $(OBJDIR) mkdir $(OBJDIR)
 
 $(OUTDIR):
-	mkdir $(OUTDIR)
+	@if not exist $(OUTDIR) mkdir $(OUTDIR)
 
 # ELF
 $(OUTDIR)/$(TARGET).elf: $(OBJS)
@@ -77,5 +76,5 @@ $(OBJDIR)/%.o: $(LPCOPEN)/src/%.c | $(OBJDIR)
 .PHONY: all clean
 
 clean:
-	rd /s /q $(OBJDIR)
-	rd /s /q $(OUTDIR)
+	@if exist $(OBJDIR) rd /s /q $(OBJDIR)
+	@if exist $(OUTDIR) rd /s /q $(OUTDIR)
