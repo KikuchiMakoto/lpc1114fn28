@@ -13,45 +13,26 @@ TARGET = main
 SRCDIR  = src
 LPCOPEN = lpc_chip_11cxx_lib
 OBJDIR  = obj
+OUTDIR  = out
 INCLUDES = -I$(LPCOPEN)/inc
-
-# ==== Build type (Debug or Release) ====
-BUILD ?= release  # デフォルトは release
-
-ifeq ($(BUILD),debug)
-    CFLAGS_EXTRA = -O0 -g -ggdb -DDEBUG
-	LDFLAGS_EXTRA = 
-    OUTDIR = out/debug
-else
-    # 高度最適化 + サイズ重視 + CPU 特化
-    CFLAGS_EXTRA = -Os -flto \
-				   -fmerge-constants -fipa-pta \
-                   -fomit-frame-pointer -fno-common \
-				   -ffunction-sections -fdata-sections \
-				   -fstrict-aliasing -fmerge-all-constants
-    LDFLAGS_EXTRA = -flto
-    OUTDIR = out/release
-endif
 
 # ==== Source files ====
 C_SOURCES   = $(SRCDIR)/cr_startup_lpc11xx.c \
               $(wildcard $(LPCOPEN)/src/*.c)
 CPP_SOURCES = $(SRCDIR)/main.cpp
 
-# ==== Object files ====
+# ==== Object files in obj/ ====
 OBJS = $(addprefix $(OBJDIR)/,$(notdir $(C_SOURCES:.c=.o))) \
        $(addprefix $(OBJDIR)/,$(notdir $(CPP_SOURCES:.cpp=.o)))
 
 # ==== Compiler/Linker flags ====
-CFLAGS  = -DCORE_M0 -DUSE_OLD_STYLE_DATA_BSS_INIT \
-		  -mcpu=cortex-m0 -mthumb -Wall -Wextra \
-		  $(CFLAGS_EXTRA) $(INCLUDES)
+CFLAGS  = -DCORE_M0 -DUSE_OLD_STYLE_DATA_BSS_INIT -mcpu=cortex-m0 -mthumb -Wall -Wextra -O2 $(INCLUDES)
 CXXFLAGS= $(CFLAGS) -fno-exceptions -fno-rtti
 LDFLAGS = -T$(SRCDIR)/lpc1114.ld \
-          -Wl,-Map=$(OUTDIR)/$(TARGET).map \
-		  -nostdlib -Wl,--gc-sections \
-          -specs=nosys.specs -specs=nano.specs \
-          -lc -lgcc $(LDFLAGS_EXTRA)
+		-nostdlib -Wl,--gc-sections \
+		-Wl,-Map=$(OUTDIR)/$(TARGET).map \
+		-specs=nosys.specs -specs=nano.specs \
+		-lc -lgcc
 
 # ==== Build rules ====
 all: $(OBJDIR) $(OUTDIR) \
@@ -60,12 +41,11 @@ all: $(OBJDIR) $(OUTDIR) \
      $(OUTDIR)/$(TARGET).hex \
      $(OUTDIR)/$(TARGET).lst
 
-# Create directories
 $(OBJDIR):
-	if not exist "$(OBJDIR)" mkdir "$(OBJDIR)"
+	mkdir $(OBJDIR)
 
 $(OUTDIR):
-	if not exist "$(OUTDIR)" mkdir "$(OUTDIR)"
+	mkdir $(OUTDIR)
 
 # ELF
 $(OUTDIR)/$(TARGET).elf: $(OBJS)
@@ -97,5 +77,5 @@ $(OBJDIR)/%.o: $(LPCOPEN)/src/%.c | $(OBJDIR)
 .PHONY: all clean
 
 clean:
-	if exist "$(OBJDIR)" rd /S /Q "$(OBJDIR)"
-	if exist "$(OUTDIR)" rd /S /Q "$(OUTDIR)"
+	rd /s /q $(OBJDIR)
+	rd /s /q $(OUTDIR)
