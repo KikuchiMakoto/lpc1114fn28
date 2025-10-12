@@ -722,8 +722,9 @@ void PendSV_Handler(void)
 __attribute__ ((section(".after_vectors")))
 void SysTick_Handler(void)
 {
-    extern void _SysTick_Handler(void);
-    _SysTick_Handler();
+    while(1)
+    {
+    }
 }
 
 //*****************************************************************************
