@@ -27,6 +27,7 @@ project(lpc1114_blinky C CXX ASM)
 # ==== Paths ====
 set(SRCDIR ${CMAKE_SOURCE_DIR}/src)
 set(LPCOPEN ${CMAKE_SOURCE_DIR}/lpc_chip_11cxx_lib)
+set(FREERTOS ${CMAKE_SOURCE_DIR}/freertos)
 
 # ==== MCU specific settings ====
 set(MCU_FLAGS
@@ -79,9 +80,10 @@ add_link_options(
 
 # ==== Include directories ====
 include_directories(${LPCOPEN}/inc)
+include_directories(${FREERTOS}/inc)
 
 # ==== Source files ====
-file(GLOB C_SOURCES ${LPCOPEN}/src/*.c)
+file(GLOB C_SOURCES ${LPCOPEN}/src/*.c ${FREERTOS}/src/*.c)
 set(C_SOURCES 
     ${C_SOURCES}
     ${SRCDIR}/cr_startup_lpc11xx.c
