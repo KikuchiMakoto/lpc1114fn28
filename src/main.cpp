@@ -1,7 +1,7 @@
 #include "chip.h"
 #include "string.h"
 
-const uint32_t OscRateIn = 8000000; // 外部オシレータの周波数（8MHz）
+const uint32_t OscRateIn = 12000000; // 外部オシレータの周波数（12MHz）
 const uint32_t ExtRateIn = 0;        // 外部クロックの周波数
 
 #define LED_PORT 0
@@ -13,24 +13,14 @@ static RINGBUFF_T txring, rxring;
 #define UART_RRB_SIZE 32	/* Receive */
 static uint8_t rxbuff[UART_RRB_SIZE];
 static uint8_t txbuff[UART_SRB_SIZE];
+static volatile uint32_t sysTickCount = 0;
 
 void delay(uint32_t count);
-
-extern "C" void SystemInit(void) {
-  	Chip_SYSCTL_PowerUp(SYSCTL_POWERDOWN_SYSOSC_PD);
-    for (int i = 0; i < 0x100; i++) { __asm("nop");}
-	Chip_Clock_SetSystemPLLSource(SYSCTL_PLLCLKSRC_MAINOSC);
-	Chip_SYSCTL_PowerDown(SYSCTL_POWERDOWN_SYSPLL_PD);
-	Chip_Clock_SetupSystemPLL(6, 1);// FCLKIN=8MHz, MSEL=6, PSEL=1, 48MHz
-    Chip_SYSCTL_PowerUp(SYSCTL_POWERDOWN_SYSPLL_PD);
-
-	while (!Chip_Clock_IsSystemPLLLocked()) {}
-
-	Chip_Clock_SetSysClockDiv(1);
-	Chip_FMC_SetFLASHAccess(FLASHTIM_50MHZ_CPU);
-	Chip_Clock_SetMainClockSource(SYSCTL_MAINCLKSRC_PLLOUT);
-	Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_IOCON);
-}
+void SystemInit_Ext(void);
+void SystemInit_Int(void);
+extern "C" void SystemInit(void) { SystemInit_Ext();} 
+extern "C" void UART_IRQHandler(void)  { Chip_UART_IRQRBHandler(LPC_USART, &rxring, &txring);}
+extern "C" void _SysTick_Handler(void) {sysTickCount+=1;}
 
 int main(void) {
     // システムクロック初期化
@@ -39,6 +29,11 @@ int main(void) {
     Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_GPIO);
     Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_UART0);
     Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_CT16B0);
+
+    // SetSystick
+    SysTick_Config(SystemCoreClock / 1000);
+    NVIC_SetPriority(SysTick_IRQn, 0);
+    NVIC_EnableIRQ(SysTick_IRQn);
 
     // Timer0 
     // for precious delay, 10us by 1 count
@@ -69,13 +64,13 @@ int main(void) {
 
     // メインループ
     while (1) {
-        // LED消灯
-        Chip_GPIO_SetPinState(LPC_GPIO, LED_PORT, LED_PIN, true);
-        delay(900);
-        
         // LED点灯
         Chip_GPIO_SetPinState(LPC_GPIO, LED_PORT, LED_PIN, false);
         delay(100);
+        
+        // LED消灯
+        Chip_GPIO_SetPinState(LPC_GPIO, LED_PORT, LED_PIN, true);
+        delay(900);
     }
     
     NVIC_DisableIRQ(UART0_IRQn);
@@ -85,26 +80,39 @@ int main(void) {
 }
 
 void delay(uint32_t count) {
-    //volatile uint32_t t_start = Chip_TIMER_ReadCount(LPC_TIMER16_0);
-    //Timer 0 count 100us per count
-    // for (;;) {
-    //     volatile uint32_t t_now = Chip_TIMER_ReadCount(LPC_TIMER16_0);
-    //     if ((t_now - t_start) >= count*10) break;
-    // }
-    while (count-- > 0) {
-        for (int i = 0; i < 1000; i++) {
-            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-        }
+    volatile uint32_t start = sysTickCount;
+    while((sysTickCount - start) < count) {
+        __WFI();
     }
 }
 
-extern "C" void UART_IRQHandler(void)
-{
-	Chip_UART_IRQRBHandler(LPC_USART, &rxring, &txring);
+void SystemInit_Ext(void) {
+  	Chip_SYSCTL_PowerUp(SYSCTL_POWERDOWN_SYSOSC_PD);
+    for (int i = 0; i < 0x100; i++) { __asm("nop");}
+	Chip_Clock_SetSystemPLLSource(SYSCTL_PLLCLKSRC_MAINOSC);
+	Chip_SYSCTL_PowerDown(SYSCTL_POWERDOWN_SYSPLL_PD);
+	Chip_Clock_SetupSystemPLL(5, 1);// FCLKIN=12MHz, MSEL=4, PSEL=1, 60MHz
+    Chip_SYSCTL_PowerUp(SYSCTL_POWERDOWN_SYSPLL_PD);
+
+	while (!Chip_Clock_IsSystemPLLLocked()) {}
+
+	Chip_Clock_SetSysClockDiv(1);
+	Chip_FMC_SetFLASHAccess(FLASHTIM_50MHZ_CPU);
+	Chip_Clock_SetMainClockSource(SYSCTL_MAINCLKSRC_PLLOUT);
+}
+
+void SystemInit_Int(void) {
+    Chip_SYSCTL_PowerUp(SYSCTL_POWERDOWN_IRC_PD);
+    Chip_SYSCTL_PowerUp(SYSCTL_POWERDOWN_IRCOUT_PD);
+    for (int i = 0; i < 0x500; i++) { __asm("nop");}
+	Chip_Clock_SetSystemPLLSource(SYSCTL_PLLCLKSRC_IRC);
+	Chip_SYSCTL_PowerDown(SYSCTL_POWERDOWN_SYSPLL_PD);
+	Chip_Clock_SetupSystemPLL(3, 1);// FCLKIN=12MHz, MSEL=4, PSEL=1, 48MHz
+    Chip_SYSCTL_PowerUp(SYSCTL_POWERDOWN_SYSPLL_PD);
+
+	while (!Chip_Clock_IsSystemPLLLocked()) {}
+
+	Chip_Clock_SetSysClockDiv(1);
+	Chip_FMC_SetFLASHAccess(FLASHTIM_50MHZ_CPU);
+	Chip_Clock_SetMainClockSource(SYSCTL_MAINCLKSRC_PLLOUT);
 }
