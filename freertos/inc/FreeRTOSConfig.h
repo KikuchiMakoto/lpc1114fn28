@@ -72,6 +72,7 @@
  * See http://www.freertos.org/a00110.html.
  *----------------------------------------------------------*/
 
+#define configENABLE_MPU                0
 #define configUSE_PREEMPTION			1
 #define configUSE_TICKLESS_IDLE         1
 #define configUSE_IDLE_HOOK				0
