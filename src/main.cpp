@@ -60,9 +60,12 @@ int main(void)
     Chip_GPIO_Init(LPC_GPIO);
     Chip_GPIO_SetPinDIROutput(LPC_GPIO, LED_PORT, LED_PIN);
 
-    xTaskCreate(vLEDTask, "vTaskLed",
-				configMINIMAL_STACK_SIZE, NULL, (tskIDLE_PRIORITY + 1UL),
-				(TaskHandle_t *) NULL);
+    static StackType_t puxST_Led[ configMINIMAL_STACK_SIZE ];
+    static StaticTask_t pxST_Led;
+    
+    xTaskCreateStatic(vLEDTask, "vTaskLed",
+            configMINIMAL_STACK_SIZE, NULL, (tskIDLE_PRIORITY + 1UL),
+            &puxST_Led[0], &pxST_Led);
 
     vTaskStartScheduler();
     return 1;
