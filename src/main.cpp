@@ -3,6 +3,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
+
 const uint32_t OscRateIn = 12000000; // 外部オシレータの周波数（12MHz）
 const uint32_t ExtRateIn = 0;        // 外部クロックの周波数
 
@@ -34,13 +36,15 @@ const uint32_t ExtRateIn = 0;        // 外部クロックの周波数
 
 /* LED0 toggle thread */
 static void vLEDTask(void *pvParameters) {
+    (void) pvParameters;
+
 	while (1) {
         // LED点灯
         Chip_GPIO_SetPinState(LPC_GPIO, LED_PORT, LED_PIN, false);
-        vTaskDelay(100/portTICK_RATE_MS);
+        vTaskDelay(100/portTICK_PERIOD_MS);
         // LED消灯
         Chip_GPIO_SetPinState(LPC_GPIO, LED_PORT, LED_PIN, true);
-        vTaskDelay(900/portTICK_RATE_MS);
+        vTaskDelay(900/portTICK_PERIOD_MS);
 	}
 }
 
@@ -58,7 +62,7 @@ int main(void)
 
     xTaskCreate(vLEDTask, "vTaskLed",
 				configMINIMAL_STACK_SIZE, NULL, (tskIDLE_PRIORITY + 1UL),
-				(xTaskHandle *) NULL);
+				(TaskHandle_t *) NULL);
 
     vTaskStartScheduler();
     return 1;
@@ -79,14 +83,14 @@ extern "C" void SystemInit(void) {
 	Chip_Clock_SetMainClockSource(SYSCTL_MAINCLKSRC_PLLOUT);
 }
 
-extern "C" void vApplicationMallocFailedHook(void)
+void vApplicationMallocFailedHook(void)
 {
 	taskDISABLE_INTERRUPTS();
 	for (;; ) {}
 }
 
 /* FreeRTOS stack overflow hook */
-extern "C" void vApplicationStackOverflowHook( TaskHandle_t xTask, char * pcTaskName )
+void vApplicationStackOverflowHook( TaskHandle_t xTask, char * pcTaskName )
 {
 	(void) xTask;
 	(void) pcTaskName;
@@ -96,4 +100,16 @@ extern "C" void vApplicationStackOverflowHook( TaskHandle_t xTask, char * pcTask
 	   function is called if a stack overflow is detected. */
 	taskDISABLE_INTERRUPTS();
 	for (;; ) {}
+}
+
+void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer,
+                                    StackType_t **ppxIdleTaskStackBuffer,
+                                    uint32_t *pulIdleTaskStackSize )
+{
+    static StaticTask_t xIdleTaskTCB;
+    static StackType_t uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
+
+    *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
+    *ppxIdleTaskStackBuffer = uxIdleTaskStack;
+    *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
 }
