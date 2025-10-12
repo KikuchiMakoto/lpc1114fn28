@@ -88,7 +88,7 @@ void delay(uint32_t count) {
 
 void SystemInit_Ext(void) {
   	Chip_SYSCTL_PowerUp(SYSCTL_POWERDOWN_SYSOSC_PD);
-    for (int i = 0; i < 0x100; i++) { __asm("nop");}
+    for (int i = 0; i < 0x100; i++) { __NOP();}
 	Chip_Clock_SetSystemPLLSource(SYSCTL_PLLCLKSRC_MAINOSC);
 	Chip_SYSCTL_PowerDown(SYSCTL_POWERDOWN_SYSPLL_PD);
 	Chip_Clock_SetupSystemPLL(5, 1);// FCLKIN=12MHz, MSEL=4, PSEL=1, 60MHz
@@ -104,7 +104,7 @@ void SystemInit_Ext(void) {
 void SystemInit_Int(void) {
     Chip_SYSCTL_PowerUp(SYSCTL_POWERDOWN_IRC_PD);
     Chip_SYSCTL_PowerUp(SYSCTL_POWERDOWN_IRCOUT_PD);
-    for (int i = 0; i < 0x500; i++) { __asm("nop");}
+    for (int i = 0; i < 0x500; i++) { __NOP();}
 	Chip_Clock_SetSystemPLLSource(SYSCTL_PLLCLKSRC_IRC);
 	Chip_SYSCTL_PowerDown(SYSCTL_POWERDOWN_SYSPLL_PD);
 	Chip_Clock_SetupSystemPLL(3, 1);// FCLKIN=12MHz, MSEL=4, PSEL=1, 48MHz
