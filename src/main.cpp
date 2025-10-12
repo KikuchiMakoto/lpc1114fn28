@@ -85,23 +85,23 @@ int main(void) {
 }
 
 void delay(uint32_t count) {
-    volatile uint32_t t_start = Chip_TIMER_ReadCount(LPC_TIMER16_0);
+    //volatile uint32_t t_start = Chip_TIMER_ReadCount(LPC_TIMER16_0);
     //Timer 0 count 100us per count
-    for (;;) {
-        volatile uint32_t t_now = Chip_TIMER_ReadCount(LPC_TIMER16_0);
-        if ((t_now - t_start) >= count*10) break;
-    }
-    // while (count-- > 0) {
-    //     for (int i = 0; i < 1000; i++) {
-    //         __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-    //         __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-    //         __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-    //         __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-    //         __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-    //         __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-    //         __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
-    //     }
+    // for (;;) {
+    //     volatile uint32_t t_now = Chip_TIMER_ReadCount(LPC_TIMER16_0);
+    //     if ((t_now - t_start) >= count*10) break;
     // }
+    while (count-- > 0) {
+        for (int i = 0; i < 1000; i++) {
+            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
+            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
+            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
+            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
+            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
+            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
+            __asm("nop");__asm("nop");__asm("nop");__asm("nop");__asm("nop");
+        }
+    }
 }
 
 extern "C" void UART_IRQHandler(void)
