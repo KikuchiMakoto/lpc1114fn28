@@ -56,7 +56,7 @@ int main(void)
     Chip_GPIO_Init(LPC_GPIO);
     Chip_GPIO_SetPinDIROutput(LPC_GPIO, LED_PORT, LED_PIN);
 
-    xTaskCreate(vLEDTask, (signed char *)"vTaskLed",
+    xTaskCreate(vLEDTask, "vTaskLed",
 				configMINIMAL_STACK_SIZE, NULL, (tskIDLE_PRIORITY + 1UL),
 				(xTaskHandle *) NULL);
 
@@ -77,4 +77,23 @@ extern "C" void SystemInit(void) {
 	Chip_Clock_SetSysClockDiv(1);
 	Chip_FMC_SetFLASHAccess(FLASHTIM_50MHZ_CPU);
 	Chip_Clock_SetMainClockSource(SYSCTL_MAINCLKSRC_PLLOUT);
+}
+
+extern "C" void vApplicationMallocFailedHook(void)
+{
+	taskDISABLE_INTERRUPTS();
+	for (;; ) {}
+}
+
+/* FreeRTOS stack overflow hook */
+extern "C" void vApplicationStackOverflowHook( TaskHandle_t xTask, char * pcTaskName )
+{
+	(void) xTask;
+	(void) pcTaskName;
+
+	/* Run time stack overflow checking is performed if
+	   configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2.  This hook
+	   function is called if a stack overflow is detected. */
+	taskDISABLE_INTERRUPTS();
+	for (;; ) {}
 }
