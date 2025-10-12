@@ -13,14 +13,16 @@ static RINGBUFF_T txring, rxring;
 #define UART_RRB_SIZE 32	/* Receive */
 static uint8_t rxbuff[UART_RRB_SIZE];
 static uint8_t txbuff[UART_SRB_SIZE];
-static volatile uint32_t sysTickCount = 0;
+static volatile uint32_t st_millis = 0;
+unsigned long millis() { return st_millis; }
+void delay(uint32_t ms);
+void delayMicroseconds(uint32_t us);
 
-void delay(uint32_t count);
 void SystemInit_Ext(void);
 void SystemInit_Int(void);
 extern "C" void SystemInit(void) { SystemInit_Ext();} 
 extern "C" void UART_IRQHandler(void)  { Chip_UART_IRQRBHandler(LPC_USART, &rxring, &txring);}
-extern "C" void _SysTick_Handler(void) {sysTickCount+=1;}
+extern "C" void _SysTick_Handler(void) { st_millis += 1;}
 
 int main(void) {
     // システムクロック初期化
@@ -30,17 +32,10 @@ int main(void) {
     Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_UART0);
     Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_CT16B0);
 
-    // SetSystick
+    // SetSystick 1ms
     SysTick_Config(SystemCoreClock / 1000);
     NVIC_SetPriority(SysTick_IRQn, 0);
     NVIC_EnableIRQ(SysTick_IRQn);
-
-    // Timer0 
-    // for precious delay, 10us by 1 count
-    Chip_TIMER_Init(LPC_TIMER16_0);
-    Chip_TIMER_Reset(LPC_TIMER16_0);
-    Chip_TIMER_PrescaleSet(LPC_TIMER16_0, (SystemCoreClock / 10000) - 1); // 100us
-    Chip_TIMER_Enable(LPC_TIMER16_0);
 
     // GPIO
     Chip_GPIO_Init(LPC_GPIO);
@@ -79,9 +74,13 @@ int main(void) {
     return 0;
 }
 
-void delay(uint32_t count) {
-    volatile uint32_t start = sysTickCount;
-    while((sysTickCount - start) < count) {
+void delayMicroseconds(uint32_t us) {
+    //
+}
+
+void delay(uint32_t ms) {
+    volatile uint32_t start = millis();
+    while((millis() - start) < ms) {
         __WFI();
     }
 }
