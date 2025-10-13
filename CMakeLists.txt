@@ -39,12 +39,11 @@ set(MCU_FLAGS
 add_compile_definitions(
     CORE_M0
     USE_OLD_STYLE_DATA_BSS_INIT
-    __OPTIMIZE_SIZE__
 )
 
 add_compile_options(
     ${MCU_FLAGS}
-    -Os
+    -Oz
     -g0
     -ffunction-sections
     -fdata-sections
