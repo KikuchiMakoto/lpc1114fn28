@@ -1,6 +1,7 @@
 /obj
 /out
 /build
+/usb_driver
 
 *.zip
 *.o

@@ -7,7 +7,11 @@
 void delayMicroseconds(uint16_t us);
 
 uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];
-
+extern "C" { 
+    extern void __libc_init_array(void);
+    void _init(void){};
+    void _fini(void){};
+}
 const uint32_t OscRateIn = 12000000; // 外部オシレータの周波数（12MHz）
 const uint32_t ExtRateIn = 0;        // 外部クロックの周波数
 
@@ -78,6 +82,8 @@ static void vLEDTask(void *pvParameters) {
 
 int main(void)
 {
+    __libc_init_array();
+
     // System Init
     SystemCoreClockUpdate();
     Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_IOCON);

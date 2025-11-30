@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "OpenOCD LPC1114 Debug",
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/build/main.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "BMPGDBSerialPort": "COM3",
+            "device": "LPC1114",
+            "configFiles": [
+                "interface/cmsis-dap.cfg",
+                "target/lpc11xx.cfg"
+            ],
+            "searchDir": [],
+            "runToEntryPoint": "main",
+            "showDevDebugOutput": "raw",
+            "swoConfig": {
+                "enabled": false
+            },
+            "preLaunchTask": "CMake: build"
+        }
+    ]
+}

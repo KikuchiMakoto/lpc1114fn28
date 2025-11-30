@@ -43,7 +43,7 @@ add_compile_definitions(
 
 add_compile_options(
     ${MCU_FLAGS}
-    -Oz
+    -O3
     -g0
     -ffunction-sections
     -fdata-sections
@@ -66,7 +66,7 @@ add_link_options(
     ${MCU_FLAGS}
     -T${LINKER_SCRIPT}
     -Wl,--gc-sections
-    -Wl,--print-gc-sections
+    -Wl,--no-print-gc-sections
     -Wl,-Map=${PROJECT_BINARY_DIR}/main.map
     -Wl,--cref
     -Wl,--no-warn-mismatch

@@ -1,0 +1,4 @@
+{
+    "cortex-debug.openocdPath": "C:/Users/kmakoto/scoop/shims/openocd.exe",
+    "cortex-debug.armToolchainPath": "C:/Users/kmakoto/scoop/apps/gcc-arm-none-eabi/current/bin/arm-none-eabi-gdb.exe"
+}
